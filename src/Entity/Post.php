@@ -12,12 +12,18 @@ use Doctrine\ORM\Mapping as ORM;
 #[ApiResource(
     normalizationContext: ['groups' => ['read:collection']],
     denormalizationContext: ['groups' => ['put:Post']],
+    collectionOperations: [
+        'get', 
+        'post' => [
+            'denormalization_context' => ['groups' => ['post:collection']]
+        ]
+    ],
     itemOperations: [
-        'put', 
+        'put',
         'delete',
         'get' => [
             'normalization_context' => ['groups' => ['read:collection', 'read:item', 'read:Post']]
-        ], 
+        ],
     ]
 )]
 class Post
@@ -29,28 +35,34 @@ class Post
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['read:collection'])]
+    #[Groups(['read:collection', 'post:collection'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['read:collection'])]
+    #[Groups(['read:collection', 'post:collection'])]
     private ?string $slug = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['read:item'])]
+    #[Groups(['read:item', 'post:collection'])]
     private ?string $content = null;
 
     #[ORM\Column]
-    #[Groups(['read:item'])]
-    private ?\DateTimeImmutable $created_at = null;
+    #[Groups(['read:item', 'post:collection'])]
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
-    #[Groups(['read:item'])]
-    private ?\DateTimeImmutable $updated_at = null;
+    #[Groups(['read:item', 'post:collection'])]
+    private ?\DateTimeImmutable $updatedAt = null;
 
-    #[ORM\ManyToOne(inversedBy: 'posts')]
-    #[Groups(['read:item', 'put:Post'])]
+    #[ORM\ManyToOne(inversedBy: 'posts', cascade:["persist"] )]
+    #[Groups(['read:item', 'put:Post', 'post:collection'])]
     private ?Category $category = null;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 
     public function getId(): ?int
     {
@@ -95,24 +107,24 @@ class Post
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $created_at): self
+    public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
-        $this->created_at = $created_at;
+        $this->createdAt = $createdAt;
 
         return $this;
     }
 
     public function getUpdatedAt(): ?\DateTimeImmutable
     {
-        return $this->updated_at;
+        return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeImmutable $updated_at): self
+    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
     {
-        $this->updated_at = $updated_at;
+        $this->updatedAt = $updatedAt;
 
         return $this;
     }
